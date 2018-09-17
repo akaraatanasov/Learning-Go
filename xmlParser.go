@@ -7,30 +7,35 @@ import (
 	"net/http"
 )
 
-// SitemapIndex - This is for all sitemap XML tags
+// SitemapIndex - All sitemap XML tags
 type SitemapIndex struct {
-	Locations []Location `xml:"sitemap"`
+	Locations []string `xml:"sitemap>loc"`
 }
 
-// Location - This is for all loc XML tags
-type Location struct {
-	Loc string `xml:"loc"`
-}
-
-func (location Location) String() string {
-	return fmt.Sprintf(location.Loc)
+// News - All news items
+type News struct {
+	Titles    []string `xml:"url>news>title"`
+	KeyWords  []string `xml:"url>news>keywords"`
+	Locations []string `xml:"url>loc"`
 }
 
 func main() {
+	var sitemap SitemapIndex
+	var news News
+
 	response, _ := http.Get("https://www.washingtonpost.com/news-sitemap-index.xml")
 	responseBody, _ := ioutil.ReadAll(response.Body)
 	response.Body.Close()
 
-	var sitemap SitemapIndex
 	xml.Unmarshal(responseBody, &sitemap)
 
-	// fmt.Println(sitemap.Locations)
-	for index, siteLocation := range sitemap.Locations {
-		fmt.Println(index, ":", siteLocation)
+	for index, link := range sitemap.Locations {
+		fmt.Println(index, ":", link)
+
+		response, _ := http.Get(link)
+		responseBody, _ := ioutil.ReadAll(response.Body)
+		xml.Unmarshal(responseBody, &news)
+
+		fmt.Println(news.Titles)
 	}
 }
